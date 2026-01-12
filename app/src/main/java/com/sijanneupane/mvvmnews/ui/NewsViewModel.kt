@@ -9,6 +9,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sijanneupane.mvvmnews.NewsApplication
+import com.sijanneupane.mvvmnews.db.User
 import com.sijanneupane.mvvmnews.models.Article
 import com.sijanneupane.mvvmnews.models.NewsResponse
 import com.sijanneupane.mvvmnews.repository.NewsRepository
@@ -24,6 +25,10 @@ class NewsViewModel(
 
     private val TAG = "NewsViewModel"
 
+    // --- THÊM CODE MỚI ---
+    val userLoginStatus = MutableLiveData<Resource<User>>()
+    val userRegisterStatus = MutableLiveData<Resource<String>>()
+
     val breakingNews: MutableLiveData<Resource<NewsResponse>> = MutableLiveData()
     val searchNews: MutableLiveData<Resource<NewsResponse>> = MutableLiveData()
 
@@ -37,6 +42,36 @@ class NewsViewModel(
 
     init {
         getBreakingNews("in")
+    }
+
+    fun login(username: String, pass: String) = viewModelScope.launch {
+        userLoginStatus.postValue(Resource.Loading())
+        try {
+            val user = newsRepository.loginUser(username, pass)
+            if (user != null) {
+                userLoginStatus.postValue(Resource.Success(user))
+            } else {
+                userLoginStatus.postValue(Resource.Error("Sai tài khoản hoặc mật khẩu"))
+            }
+        } catch (t: Throwable) {
+            userLoginStatus.postValue(Resource.Error(t.message ?: "Lỗi hệ thống"))
+        }
+    }
+
+    fun register(user: User) = viewModelScope.launch {
+        userRegisterStatus.postValue(Resource.Loading())
+        try {
+            val exist = newsRepository.checkUserExist(user.username)
+            if (exist == null) {
+                newsRepository.registerUser(user)
+                userRegisterStatus.postValue(Resource.Success("Đăng ký thành công!"))
+            } else {
+                userRegisterStatus.postValue(Resource.Error("Tài khoản đã tồn tại"))
+            }
+        } catch (t: Throwable) {
+            Log.e(TAG, "Register error", t)
+            userRegisterStatus.postValue(Resource.Error("Lỗi đăng ký: ${t.message}"))
+        }
     }
 
     fun getBreakingNews(countryCode: String) = viewModelScope.launch {

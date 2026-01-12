@@ -1,51 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/news_nav_graph"
-    app:startDestination="@id/breakingNewsFragment">
-
-    <fragment
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/news_nav_graph"
+            app:startDestination="@id/loginFragment"> <fragment
         android:id="@+id/breakingNewsFragment"
         android:name="com.sijanneupane.mvvmnews.ui.fragments.BreakingNewsFragment"
         android:label="BreakingNewsFragment" >
-        <action
+    <action
             android:id="@+id/action_breakingNewsFragment_to_articleFragment"
             app:destination="@id/articleFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"/>
-    </fragment>
+</fragment>
+
     <fragment
-        android:id="@+id/searchNewsFragment"
-        android:name="com.sijanneupane.mvvmnews.ui.fragments.SearchNewsFragment"
-        android:label="SearchNewsFragment" >
+            android:id="@+id/searchNewsFragment"
+            android:name="com.sijanneupane.mvvmnews.ui.fragments.SearchNewsFragment"
+            android:label="SearchNewsFragment" >
         <action
-            android:id="@+id/action_searchNewsFragment_to_articleFragment"
-            app:destination="@id/articleFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"/>
+                android:id="@+id/action_searchNewsFragment_to_articleFragment"
+                app:destination="@id/articleFragment"
+                app:enterAnim="@anim/slide_in_right"
+                app:exitAnim="@anim/slide_out_left"
+                app:popEnterAnim="@anim/slide_in_left"
+                app:popExitAnim="@anim/slide_out_right"/>
     </fragment>
+
     <fragment
-        android:id="@+id/savedNewsFragment"
-        android:name="com.sijanneupane.mvvmnews.ui.fragments.SavedNewsFragment"
-        android:label="SavedNewsFragment" >
+            android:id="@+id/savedNewsFragment"
+            android:name="com.sijanneupane.mvvmnews.ui.fragments.SavedNewsFragment"
+            android:label="SavedNewsFragment" >
         <action
-            android:id="@+id/action_savedNewsFragment_to_articleFragment"
-            app:destination="@id/articleFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"/>
+                android:id="@+id/action_savedNewsFragment_to_articleFragment"
+                app:destination="@id/articleFragment"
+                app:enterAnim="@anim/slide_in_right"
+                app:exitAnim="@anim/slide_out_left"
+                app:popEnterAnim="@anim/slide_in_left"
+                app:popExitAnim="@anim/slide_out_right"/>
     </fragment>
+
     <fragment
-        android:id="@+id/articleFragment"
-        android:name="com.sijanneupane.mvvmnews.ui.fragments.ArticleFragment"
-        android:label="ArticleFragment" >
+            android:id="@+id/articleFragment"
+            android:name="com.sijanneupane.mvvmnews.ui.fragments.ArticleFragment"
+            android:label="ArticleFragment" >
         <argument
-            android:name="article"
-            app:argType="com.sijanneupane.mvvmnews.models.Article" />
+                android:name="article"
+                app:argType="com.sijanneupane.mvvmnews.models.Article" />
     </fragment>
+
+    <fragment
+            android:id="@+id/loginFragment"
+            android:name="com.sijanneupane.mvvmnews.ui.fragments.LoginFragment"
+            android:label="Login"
+            tools:layout="@layout/fragment_login"> <action
+            android:id="@+id/action_loginFragment_to_breakingNewsFragment"
+            app:destination="@id/breakingNewsFragment"/>
+        <action
+                android:id="@+id/action_loginFragment_to_registerFragment"
+                app:destination="@id/registerFragment"/>
+    </fragment>
+
+    <fragment
+            android:id="@+id/registerFragment"
+            android:name="com.sijanneupane.mvvmnews.ui.fragments.RegisterFragment"
+            android:label="Register"
+            tools:layout="@layout/fragment_register"> <action
+            android:id="@+id/action_registerFragment_to_loginFragment"
+            app:destination="@id/loginFragment"/>
+    </fragment>
+
 </navigation>
