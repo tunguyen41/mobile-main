@@ -8,30 +8,33 @@ import androidx.room.TypeConverters
 import com.sijanneupane.mvvmnews.models.Article
 
 @Database(
-    entities = [Article::class],
-    version = 2,   // <- tăng lên (2, 3, ...)
+    entities = [Article::class, User::class], // ✅ Đã có User
+    version = 3,                              // ✅ Đã tăng version
     exportSchema = false
 )
-
 @TypeConverters(Converters::class)
 abstract class ArticleDatabase : RoomDatabase() {
 
-    abstract fun articleDao(): ArticleDao   // ✅ dùng articleDao()
+    abstract fun getArticleDao(): ArticleDao // Đổi tên cho thống nhất (tùy chọn)
+    abstract fun getUserDao(): UserDao       // ✅ Đã thêm UserDao
 
     companion object {
         @Volatile
         private var INSTANCE: ArticleDatabase? = null
+        private val LOCK = Any()
 
-        fun getInstance(context: Context): ArticleDatabase =
-            INSTANCE ?: synchronized(this) {
-                INSTANCE ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    ArticleDatabase::class.java,
-                    "article_db.db"
-                ).fallbackToDestructiveMigration()
-                    .build()
-                    .also { INSTANCE = it }
-            }
+        // Cách viết chuẩn dùng operator invoke để gọi instance dễ hơn
+        operator fun invoke(context: Context) = INSTANCE ?: synchronized(LOCK) {
+            INSTANCE ?: createDatabase(context).also { INSTANCE = it }
+        }
+
+        private fun createDatabase(context: Context) =
+            Room.databaseBuilder(
+                context.applicationContext,
+                ArticleDatabase::class.java,
+                "article_db.db"
+            )
+                .fallbackToDestructiveMigration() // ✅ Quan trọng: Xóa data cũ khi update version
+                .build()
     }
-
 }

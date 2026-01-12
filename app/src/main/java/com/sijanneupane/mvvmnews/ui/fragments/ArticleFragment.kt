@@ -1,5 +1,6 @@
 package com.sijanneupane.mvvmnews.ui.fragments
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
@@ -33,10 +34,9 @@ class ArticleFragment : Fragment(R.layout.fragment_article) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentArticleBinding.bind(view)
 
-        viewModel = (activity as MainActivity).viewModel
+        viewModel = (requireActivity() as MainActivity).viewModel
         val article = args.article
 
-        // Save luôn hoạt động offline
         binding.fab.setOnClickListener {
             viewModel.saveArticle(article)
             Snackbar.make(binding.root, "Article saved!", Snackbar.LENGTH_SHORT).show()
@@ -47,32 +47,39 @@ class ArticleFragment : Fragment(R.layout.fragment_article) {
             true
         }
 
-        // ✅ OFFLINE MODE: không load WebView
         if (!hasInternetConnection(requireContext())) {
-            binding.webView.visibility = View.GONE
-            binding.offlineContainer.visibility = View.VISIBLE
-
-            Glide.with(binding.root)
-                .load(article.image ?: article.urlToImage)
-                .into(binding.ivOfflineImage)
-
-            binding.tvOfflineTitle.text = article.title ?: "(No title)"
-            val sourceName = article.source?.name ?: ""
-            val time = article.publishedAt ?: ""
-            binding.tvOfflineMeta.text = listOf(sourceName, time).filter { it.isNotBlank() }.joinToString(" • ")
-
-            val offlineText = when {
-                !article.content.isNullOrBlank() -> article.content
-                !article.description.isNullOrBlank() -> article.description
-                else -> "Bạn đang offline. Bài này chỉ lưu tiêu đề/mô tả. Muốn đọc full thì cần mạng (hoặc bạn phải cache HTML)."
-            }
-            binding.tvOfflineContent.text = offlineText
-
-            Snackbar.make(binding.root, "Offline: hiển thị nội dung đã lưu", Snackbar.LENGTH_SHORT).show()
+            showOfflineContent(article)
             return
         }
 
-        // ✅ ONLINE MODE: dùng WebView bình thường
+        showOnlineContent(article)
+    }
+
+    private fun showOfflineContent(article: com.sijanneupane.mvvmnews.models.Article) {
+        binding.webView.visibility = View.GONE
+        binding.offlineContainer.visibility = View.VISIBLE
+
+        Glide.with(binding.root)
+            .load(article.image ?: article.urlToImage)
+            .into(binding.ivOfflineImage)
+
+        binding.tvOfflineTitle.text = article.title ?: "(No title)"
+        val sourceName = article.source?.name ?: ""
+        val time = article.publishedAt ?: ""
+        binding.tvOfflineMeta.text = listOf(sourceName, time).filter { it.isNotBlank() }.joinToString(" • ")
+
+        val offlineText = when {
+            !article.content.isNullOrBlank() -> article.content
+            !article.description.isNullOrBlank() -> article.description
+            else -> "Bạn đang offline. Bài này chỉ lưu tiêu đề/mô tả."
+        }
+        binding.tvOfflineContent.text = offlineText
+
+        Snackbar.make(binding.root, "Offline: hiển thị nội dung đã lưu", Snackbar.LENGTH_SHORT).show()
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun showOnlineContent(article: com.sijanneupane.mvvmnews.models.Article) {
         binding.offlineContainer.visibility = View.GONE
         binding.webView.visibility = View.VISIBLE
 
@@ -91,11 +98,7 @@ class ArticleFragment : Fragment(R.layout.fragment_article) {
         binding.webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
 
-            override fun onReceivedError(
-                view: WebView?,
-                request: WebResourceRequest?,
-                error: WebResourceError?
-            ) {
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
                 super.onReceivedError(view, request, error)
                 if (request?.isForMainFrame == true) {
                     Snackbar.make(binding.root, "Web load error: ${error?.description}", Snackbar.LENGTH_LONG).show()
@@ -103,7 +106,12 @@ class ArticleFragment : Fragment(R.layout.fragment_article) {
             }
         }
 
-        binding.webView.loadUrl(article.url.orEmpty())
+        val url = article.url
+        if (!url.isNullOrBlank()) {
+            binding.webView.loadUrl(url)
+        } else {
+            Snackbar.make(binding.root, "Invalid article URL", Snackbar.LENGTH_SHORT).show()
+        }
     }
 
     private fun hasInternetConnection(context: Context): Boolean {
@@ -115,7 +123,23 @@ class ArticleFragment : Fragment(R.layout.fragment_article) {
                 || caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
     }
 
+    override fun onPause() {
+        super.onPause()
+        _binding?.webView?.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        _binding?.webView?.onResume()
+    }
+
     override fun onDestroyView() {
+        _binding?.webView?.apply {
+            stopLoading()
+            loadUrl("about:blank")
+            clearHistory()
+            destroy()
+        }
         super.onDestroyView()
         _binding = null
     }
